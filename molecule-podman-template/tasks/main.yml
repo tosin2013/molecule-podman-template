@@ -1,0 +1,10 @@
+---
+# tasks file for role
+# Add your tasks below
+
+# Example task:
+# - name: Ensure required packages are installed
+#   ansible.builtin.package:
+#     name: "{{ item }}"
+#     state: present
+#   loop: "{{ required_packages }}"

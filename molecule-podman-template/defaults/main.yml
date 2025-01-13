@@ -1,0 +1,8 @@
+---
+# defaults file for role
+# Define default variables here
+
+# Example:
+# required_packages:
+#   - httpd
+#   - firewalld

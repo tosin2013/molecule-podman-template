@@ -1,0 +1,22 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Example assertion
+      ansible.builtin.assert:
+        that: true
+        success_msg: "Basic verification passed"
+        
+    # Add your verification tasks below
+    # Example:
+    # - name: Check if required packages are installed
+    #   ansible.builtin.package:
+    #     name: "{{ item }}"
+    #     state: present
+    #   check_mode: true
+    #   register: pkg_check
+    #   failed_when: pkg_check.changed
+    #   loop:
+    #     - httpd
+    #     - firewalld

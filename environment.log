@@ -1,0 +1,9 @@
+Environment Validation Started: Sun Jan 12 22:09:48 EST 2025
+[0m[2025-01-12 22:09:48] [INFO] Starting environment validation...[0m
+[0m[2025-01-12 22:09:48] [INFO] Current user: lab-user[0m
+[0;32m[2025-01-12 22:09:48] [SUCCESS] User check passed[0m
+[0m[2025-01-12 22:09:48] [INFO] OS Version: Red Hat Enterprise Linux release 9.5 (Plow)[0m
+[0;32m[2025-01-12 22:09:48] [SUCCESS] RHEL version check passed[0m
+[0m[2025-01-12 22:09:48] [INFO] Checking SELinux status...[0m
+[0;32m[2025-01-12 22:09:48] [SUCCESS] SELinux is in enforcing mode[0m
+[0m[2025-01-12 22:09:48] [INFO] Podman version: podman version 5.2.2[0m
