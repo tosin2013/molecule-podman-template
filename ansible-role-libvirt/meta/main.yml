@@ -1,0 +1,23 @@
+---
+galaxy_info:
+  role_name: libvirt
+  namespace: namespace  # Replace with your namespace
+  author: your_name
+  description: Role to configure libvirt access on RHEL 9.5
+  company: Your Company
+  license: MIT
+  min_ansible_version: "2.9"
+
+  platforms:
+    - name: EL
+      versions:
+        - "9"
+
+  galaxy_tags:
+    - rhel
+    - libvirt
+    - virtualization
+    - kvm
+    - qemu
+
+dependencies: []

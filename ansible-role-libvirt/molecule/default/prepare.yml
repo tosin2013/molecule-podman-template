@@ -1,0 +1,63 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Debug system information
+      ansible.builtin.debug:
+        msg: "{{ ansible_distribution }} {{ ansible_distribution_version }}"
+
+    - name: Check systemd unit files for virtqemud
+      ansible.builtin.command: systemctl list-unit-files | grep virtqemu
+      register: unit_files
+      changed_when: false
+      failed_when: false
+
+    - name: Debug unit files
+      ansible.builtin.debug:
+        var: unit_files
+
+    - name: Check if virtqemud.socket exists
+      ansible.builtin.stat:
+        path: /usr/lib/systemd/system/virtqemud.socket
+      register: virtqemud_socket
+
+    - name: Enable and start virtqemud socket if exists
+      ansible.builtin.systemd:
+        name: virtqemud.socket
+        state: started
+        enabled: true
+      become: true
+      when: virtqemud_socket.stat.exists
+      register: socket_status
+
+    - name: Check if virtlogd.socket exists
+      ansible.builtin.stat:
+        path: /usr/lib/systemd/system/virtlogd.socket
+      register: virtlogd_socket
+
+    - name: Enable and start virtlogd socket if exists
+      ansible.builtin.systemd:
+        name: virtlogd.socket
+        state: started
+        enabled: true
+      become: true
+      when: virtlogd_socket.stat.exists
+      register: log_socket_status
+
+    - name: Debug socket statuses
+      ansible.builtin.debug:
+        msg: >
+          virtqemud: {{ virtqemud_socket.stat.exists | ternary('exists', 'missing') }},
+          virtlogd: {{ virtlogd_socket.stat.exists | ternary('exists', 'missing') }}
+
+    - name: Check systemd status
+      ansible.builtin.command: systemctl status
+      register: systemd_status
+      changed_when: false
+      failed_when: false
+
+    - name: Debug systemd status
+      ansible.builtin.debug:
+        var: systemd_status

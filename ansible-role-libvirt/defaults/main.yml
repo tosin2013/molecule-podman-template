@@ -1,0 +1,19 @@
+---
+# defaults file for libvirt role
+
+# User to be added to libvirt group (optional)
+# libvirt_user: "username"
+
+# Default libvirt URI
+libvirt_uri: "qemu:///system"
+
+# Default network settings
+libvirt_network:
+  name: "default"
+  autostart: true
+
+# Default pool settings
+libvirt_pool:
+  name: "default"
+  path: "/var/lib/libvirt/images"
+  autostart: true
