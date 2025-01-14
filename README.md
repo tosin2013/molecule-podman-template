@@ -1,6 +1,63 @@
 # Ansible Role Template for RHEL 9.5 with Podman Testing
 
+[![License](https://img.shields.io/badge/License-GPL-blue.svg)](LICENSE)
+
 This template provides a foundation for creating Ansible roles specifically designed for Red Hat Enterprise Linux (RHEL) 9.5 environments. It includes the basic structure and testing capabilities using Molecule with Podman as the container engine.
+
+## Table of Contents
+- [Documentation](#documentation)
+- [Architecture Overview](#architecture-overview)
+- [Requirements](#requirements)
+- [Getting Started](#getting-started)
+- [Role Variables](#role-variables)
+- [Dependencies](#dependencies)
+- [Example Playbook](#example-playbook)
+- [Testing](#testing)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
+- [Author Information](#author-information)
+
+## Documentation
+
+Comprehensive documentation is available in the [docs](docs/) directory:
+
+- [Overview](docs/overview.md) - Project architecture and design
+- [Usage](docs/usage.md) - Installation and usage instructions
+- [Testing](docs/testing.md) - Detailed testing procedures
+- [Troubleshooting](docs/troubleshooting.md) - Common issues and solutions
+- [Contributing](docs/contributing.md) - Contribution guidelines
+- [API Reference](docs/api.md) - Role parameters and interfaces
+- [Changelog](docs/changelog.md) - Version history and release notes
+
+## Architecture Overview
+
+The template follows standard Ansible role structure with additional Molecule testing configuration:
+
+```
+molecule-podman-template/
+├── defaults/          # Default variables
+│   └── main.yml
+├── tasks/             # Main role tasks
+│   └── main.yml
+├── meta/              # Role metadata
+│   └── main.yml
+├── molecule/          # Molecule testing configuration
+│   └── default/
+│       ├── molecule.yml  # Test environment config
+│       ├── converge.yml  # Test playbook
+│       ├── verify.yml    # Test cases
+│       ├── prepare.yml   # Test environment setup
+│       └── Dockerfile    # Test container image
+└── tests/             # Integration tests
+    └── test.yml
+```
+
+The testing infrastructure uses:
+- Podman as the container engine
+- UBI 9 (Universal Base Image) as the base container
+- Molecule for test orchestration
+- Ansible for role execution and verification
 
 ## Requirements
 
@@ -43,10 +100,87 @@ This template provides a foundation for creating Ansible roles specifically desi
 
 Define your variables in `defaults/main.yml`. Document each variable here:
 
+### Common Variables
+
 ```yaml
-# Example variable
+# Target RHEL version
 rhel_version: "9.5"
+
+# System package configuration
+system_packages:
+  - vim-enhanced
+  - git
+  - curl
+
+# Service configuration
+services:
+  - name: sshd
+    state: started
+    enabled: true
+
+# Firewall configuration
+firewall:
+  ports:
+    - 22
+    - 80
+    - 443
+  services:
+    - ssh
+    - http
+    - https
+
+# User management
+users:
+  - name: admin
+    groups: wheel
+    ssh_key: "ssh-rsa AAAAB3NzaC1yc2E..."
 ```
+
+### Variable Usage Examples
+
+1. Override default packages:
+```yaml
+system_packages:
+  - vim-enhanced
+  - git
+  - curl
+  - htop
+  - tmux
+```
+
+2. Configure additional services:
+```yaml
+services:
+  - name: sshd
+    state: started
+    enabled: true
+  - name: httpd
+    state: started
+    enabled: true
+```
+
+3. Add firewall rules:
+```yaml
+firewall:
+  ports:
+    - 22
+    - 80
+    - 443
+    - 8080
+  services:
+    - ssh
+    - http
+    - https
+    - cockpit
+```
+
+### Best Practices
+
+- Use descriptive variable names
+- Group related variables together
+- Provide default values that work for most cases
+- Document each variable with comments in defaults/main.yml
+- Use YAML anchors and aliases for repeated structures
 
 ## Dependencies
 
@@ -71,49 +205,58 @@ Here's how to use this role in your playbook:
 
 ## Testing
 
-This template uses Molecule with Podman for testing. The configuration is already set up for RHEL 9.5 compatibility.
+This template uses Molecule with Podman for testing. The configuration is already set up for RHEL 9.5 compatibility. For detailed testing procedures and examples, see the [Testing Documentation](docs/testing.md).
 
-To test the role:
+### Key Testing Features
+- Podman-based test environments
+- UBI 9 container images
+- Systemd support in containers
+- Comprehensive test verification
 
+### Quick Start
 ```bash
-# Create the test container
-molecule create
-
-# Run the role
-molecule converge
-
-# Run the tests
-molecule verify
-
-# Clean up
-molecule destroy
-
-# Run the complete test sequence
+# Run complete test sequence
 molecule test
 ```
 
+For more commands and detailed testing workflow, refer to the [Testing Documentation](docs/testing.md).
+
 ## Troubleshooting
 
-1. Ensure Podman is installed and running:
-   ```bash
-   podman info
-   ```
+For common issues and solutions, refer to the [Troubleshooting Documentation](docs/troubleshooting.md). This includes:
 
-2. Verify access to UBI images:
-   ```bash
-   podman pull registry.access.redhat.com/ubi9/ubi-init:latest
-   ```
+- Podman installation and configuration
+- UBI image access
+- SELinux context issues
+- Systemd in containers
+- Network configuration
+- Molecule debugging
 
-3. Check SELinux contexts if running on RHEL:
-   ```bash
-   sudo setenforce Permissive # if needed for testing
-   ```
+### Quick Diagnostics
+```bash
+# Check container status
+podman ps -a
+
+# View container logs
+podman logs <container>
+
+# Inspect container configuration
+podman inspect <container>
+```
+
+## Contributing
+
+We welcome contributions! Please read our [Contribution Guidelines](docs/contributing.md) for details on how to:
+
+- Submit issues
+- Create pull requests
+- Follow coding standards
+- Write documentation
 
 ## License
 
-MIT
+GNU General Public License v3.0
 
 ## Author Information
 
-Your Name
-Your Contact Information
+Tosin Akinosho

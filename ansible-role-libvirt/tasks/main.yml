@@ -1,6 +1,8 @@
 ---
-# tasks for libvirt role
+# tasks file for libvirt role
+# This role configures libvirt virtualization environment on RHEL 9.5 systems
 
+# Install core libvirt packages and dependencies
 - name: Install required packages
   ansible.builtin.dnf:
     name:
@@ -12,12 +14,15 @@
       - python3-libvirt
     state: present
 
+# Ensure libvirtd service is running and enabled on boot
 - name: Enable and start libvirtd service
   ansible.builtin.systemd:
     name: libvirtd
     state: started
     enabled: true
 
+# Add specified user to libvirt group for management access
+# Only runs when libvirt_user variable is defined
 - name: Add user to libvirt group
   ansible.builtin.user:
     name: "{{ libvirt_user }}"
@@ -25,6 +30,8 @@
     append: true
   when: libvirt_user is defined
 
+# Configure libvirtd to use libvirt group for socket access
+# This allows members of libvirt group to manage virtualization
 - name: Set libvirtd unix_sock_group
   ansible.builtin.lineinfile:
     path: /etc/libvirt/libvirtd.conf
@@ -33,6 +40,8 @@
     state: present
   register: sock_group_result
 
+# Set appropriate permissions for libvirt socket
+# 0770 allows group members read/write access
 - name: Set libvirtd unix_sock_rw_perms
   ansible.builtin.lineinfile:
     path: /etc/libvirt/libvirtd.conf
@@ -41,6 +50,8 @@
     state: present
   register: sock_perms_result
 
+# Restart libvirtd service if socket configuration changed
+# Ensures new permissions take effect
 - name: Restart libvirtd service
   ansible.builtin.systemd:
     name: libvirtd

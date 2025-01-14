@@ -1,12 +1,12 @@
 ---
 galaxy_info:
-  role_name: role_name  # Replace with your role name
-  namespace: namespace  # Replace with your namespace
-  author: Your Name
-  description: Role description
-  company: Your Company
+  role_name: molecule-podman-template  # Replace with your role name
+  namespace: molecule-podman-template  # Replace with your namespace
+  author: Tosin Akinsho
+  description: An Ansible role for testing infrastructure using Molecule and Podman
+  company: Red Hat
 
-  license: MIT
+  license: GPLv3
 
   min_ansible_version: "2.12"
 

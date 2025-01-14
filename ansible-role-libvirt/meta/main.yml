@@ -1,11 +1,11 @@
 ---
 galaxy_info:
   role_name: libvirt
-  namespace: namespace  # Replace with your namespace
-  author: your_name
+  namespace: ansible-role-libvirt
+  author: Tosin Akinosho
   description: Role to configure libvirt access on RHEL 9.5
-  company: Your Company
-  license: MIT
+  company: 
+  license: GPL
   min_ansible_version: "2.9"
 
   platforms:

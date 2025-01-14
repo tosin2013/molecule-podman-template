@@ -1,75 +1,47 @@
 # Ansible Role: libvirt
 
-This Ansible role installs and configures libvirt on RHEL 9.5 systems, providing access to virtualization capabilities.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+An Ansible role to configure and manage libvirt virtualization environment on RHEL 9.5 systems.
+
+## Table of Contents
+- [Requirements](#requirements)
+- [Role Variables](#role-variables)
+- [Dependencies](#dependencies)
+- [Example Playbook](#example-playbook)
+- [License](#license)
+- [Author Information](#author-information)
 
 ## Requirements
 
-* RHEL 9.5 or compatible distribution
-* Ansible 2.9 or higher
-* Python 3.9 or higher
-* Sufficient privileges to manage system services and install packages
+- RHEL 9.5 or compatible system
+- Ansible 2.9 or higher
+- Python 3.6 or higher
+- Root privileges
 
 ## Role Variables
 
 Available variables are listed below, along with default values (see `defaults/main.yml`):
 
 ```yaml
-# User to be added to libvirt group (optional)
-# libvirt_user: "username"
-
-# Default libvirt URI
-libvirt_uri: "qemu:///system"
-
-# Default network settings
-libvirt_network:
-  name: "default"
-  autostart: true
-
-# Default pool settings
-libvirt_pool:
-  name: "default"
-  path: "/var/lib/libvirt/images"
-  autostart: true
+# User to add to libvirt group for management access
+libvirt_user: ""
 ```
 
 ## Dependencies
 
-None.
+None
 
 ## Example Playbook
 
 ```yaml
-- hosts: virtualization_hosts
-  become: true
-  vars:
-    libvirt_user: "myuser"
+- hosts: virtualization_servers
+  become: yes
   roles:
-    - ansible-role-libvirt
+    - role: tosin-akinosho.libvirt
+      vars:
+        libvirt_user: "admin"
 ```
-
-## Role Actions
-
-This role will:
-
-1. Install required libvirt packages
-2. Configure and start the libvirtd service
-3. Set up proper permissions for libvirt access
-4. Add specified user to the libvirt group (if libvirt_user is defined)
-5. Configure libvirt socket permissions
-
-## Testing
-
-This role includes Molecule tests using Podman as the driver. To run the tests:
-
-```bash
-molecule test
-```
-
-The tests will verify:
-- Package installation
-- Service status
-- Socket permissions
-- Basic virsh functionality
 
 ## License
 
@@ -77,5 +49,24 @@ MIT
 
 ## Author Information
 
-Your Name
-Your Contact Information
+This role was created by [Tosin Akinosho](https://github.com/tosin-akinosho).
+
+## Testing
+
+This role includes Molecule tests for verification. To run tests:
+
+```bash
+molecule test
+```
+
+## Contribution Guidelines
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a new Pull Request
+
+Please ensure your code follows the existing style and includes appropriate tests.
