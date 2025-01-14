@@ -27,29 +27,9 @@
 
     - name: Check libvirt socket permissions
       ansible.builtin.stat:
-        path: /var/run/libvirt/libvirt-sock
+        path: /run/libvirt/libvirt-sock
       register: socket_status
-      failed_when: not socket_status.stat.mode == "0770"
-
-    - name: Get libvirt host capabilities
-      community.libvirt.virt:
-        command: capabilities
-      register: libvirt_caps
-      failed_when: libvirt_caps.failed
-
-    - name: Display libvirt capabilities
-      ansible.builtin.debug:
-        var: libvirt_caps
-
-    - name: List all domains
-      community.libvirt.virt:
-        command: list_vms
-      register: domain_list
-      failed_when: domain_list.failed
-
-    - name: Display domain list
-      ansible.builtin.debug:
-        var: domain_list
+      failed_when: not socket_status.stat.exists
 
     - name: Get libvirt host info
       community.libvirt.virt:
@@ -60,6 +40,16 @@
     - name: Display node info
       ansible.builtin.debug:
         var: node_info
+
+    - name: List all domains
+      community.libvirt.virt:
+        command: list_vms
+      register: domain_list
+      failed_when: domain_list.failed
+
+    - name: Display domain list
+      ansible.builtin.debug:
+        var: domain_list
 
     - name: Check libvirt connection URI
       ansible.builtin.command: virsh uri

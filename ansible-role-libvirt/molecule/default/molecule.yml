@@ -2,55 +2,15 @@
 dependency:
   name: galaxy
 driver:
-  name: podman
+  name: default
+  options:
+    managed: false
+    ansible_connection_options:
+      ansible_connection: local
 platforms:
-  - name: rhel95
-    image: quay.io/centos/centos:stream9
-    privileged: true
-    security_opts:
-      - label=disable
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      - /var/run/libvirt:/var/run/libvirt:rw
-      - /var/lib/libvirt:/var/lib/libvirt:rw
-      - /dev/kvm:/dev/kvm:rw
-      - /sys/kernel/config:/sys/kernel/config:rw
-    tmpfs:
-      - /run:exec,rw
-      - /tmp:exec,rw
-    command: "/usr/sbin/init"
-    cgroupns: host
-    cap_add:
-      - SYS_ADMIN
-      - NET_ADMIN
-    pre_build_image: false
-    dockerfile: |
-      FROM quay.io/centos/centos:stream9
-      RUN dnf install -y dnf-plugins-core epel-release
-      RUN dnf config-manager --set-enabled crb
-      RUN dnf -y update
-      RUN dnf install -y \
-          systemd \
-          python3-pip \
-          libvirt \
-          libvirt-daemon-driver-qemu \
-          libvirt-client \
-          qemu-kvm \
-          virt-install \
-          python3-libvirt \
-          systemd-container \
-          procps-ng \
-          iproute
-      RUN mkdir -p /var/run/libvirt/common /var/run/libvirt/qemu /var/lib/libvirt/qemu /var/lib/libvirt/images /run/libvirt && \
-          chown -R root:libvirt /var/run/libvirt /var/lib/libvirt /run/libvirt && \
-          chmod -R g+rwx /var/run/libvirt /var/lib/libvirt /run/libvirt
-      RUN mkdir -p /etc/ansible && \
-          echo "[defaults]" > /etc/ansible/ansible.cfg && \
-          echo "remote_tmp = /var/tmp/ansible-tmp" >> /etc/ansible/ansible.cfg && \
-          echo "local_tmp = /var/tmp/ansible-tmp" >> /etc/ansible/ansible.cfg && \
-          mkdir -p /var/tmp/ansible-tmp && \
-          chmod -R 777 /var/tmp/ansible-tmp
-      RUN systemctl enable virtqemud.socket virtlogd.socket
+  - name: localhost
+    groups:
+      - molecule
 provisioner:
   name: ansible
   env:
@@ -58,8 +18,8 @@ provisioner:
     ANSIBLE_REMOTE_TMP: /var/tmp/ansible-tmp
     ANSIBLE_LOCAL_TEMP: /var/tmp/ansible-tmp
   inventory:
-    host_vars:
-      rhel95:
-        ansible_user: root
+    group_vars:
+      molecule:
+        ansible_connection: local
 verifier:
   name: ansible

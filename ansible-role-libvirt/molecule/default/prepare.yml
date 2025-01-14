@@ -1,6 +1,7 @@
 ---
 - name: Prepare
   hosts: all
+  become: true
   gather_facts: true
 
   tasks:
@@ -9,10 +10,11 @@
         msg: "{{ ansible_distribution }} {{ ansible_distribution_version }}"
 
     - name: Check systemd unit files for virtqemud
-      ansible.builtin.command: systemctl list-unit-files | grep virtqemu
+      ansible.builtin.command:
+        cmd: "systemctl list-unit-files | grep virtqemu"
       register: unit_files
-      changed_when: false
       failed_when: false
+      changed_when: false
 
     - name: Debug unit files
       ansible.builtin.debug:
@@ -28,9 +30,14 @@
         name: virtqemud.socket
         state: started
         enabled: true
-      become: true
       when: virtqemud_socket.stat.exists
-      register: socket_status
+
+    - name: Enable and start virtqemud service if socket exists
+      ansible.builtin.systemd:
+        name: virtqemud
+        state: started
+        enabled: true
+      when: virtqemud_socket.stat.exists
 
     - name: Check if virtlogd.socket exists
       ansible.builtin.stat:
@@ -42,21 +49,18 @@
         name: virtlogd.socket
         state: started
         enabled: true
-      become: true
       when: virtlogd_socket.stat.exists
-      register: log_socket_status
 
     - name: Debug socket statuses
       ansible.builtin.debug:
-        msg: >
-          virtqemud: {{ virtqemud_socket.stat.exists | ternary('exists', 'missing') }},
-          virtlogd: {{ virtlogd_socket.stat.exists | ternary('exists', 'missing') }}
+        msg: "virtqemud: {{ 'exists' if virtqemud_socket.stat.exists else 'not found' }}, virtlogd: {{ 'exists' if virtlogd_socket.stat.exists else 'not found' }}\n"
 
     - name: Check systemd status
-      ansible.builtin.command: systemctl status
+      ansible.builtin.command:
+        cmd: "systemctl status"
       register: systemd_status
-      changed_when: false
       failed_when: false
+      changed_when: false
 
     - name: Debug systemd status
       ansible.builtin.debug:

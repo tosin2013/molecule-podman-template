@@ -5,14 +5,10 @@
   vars:
     libvirt_user: "ansible"
 
-  pre_tasks:
-    - name: Install community.libvirt collection
-      ansible.builtin.command: ansible-galaxy collection install community.libvirt
-      delegate_to: localhost
-      run_once: true
-      changed_when: false
+  collections:
+    - community.libvirt
 
   tasks:
-    - name: Include libvirt role
+    - name: Include ansible-role-libvirt
       ansible.builtin.include_role:
-        name: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
+        name: ansible-role-libvirt
