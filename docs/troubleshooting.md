@@ -1,231 +1,290 @@
 # Troubleshooting Guide
 
-## Common Issues and Solutions
+This document provides guidance for identifying and resolving common issues with the Ansible Libvirt Role and Molecule Podman Template.
 
-### 1. Molecule Test Failures
+## Environment Setup Issues
 
-**Symptoms:**
-- Tests fail during `molecule converge`
-- Container fails to start
-- Systemd services not running
+### Missing Dependencies
 
-**Solutions:**
-1. Verify Podman is installed and running:
+#### Problem
+Required packages or Python modules are not installed.
+
+#### Solution
+1. Install required packages:
 ```bash
-podman --version
-systemctl status podman
+# For Red Hat-based systems
+sudo dnf install -y libvirt qemu-kvm virt-install virt-viewer python3-libvirt
+
+# For Debian-based systems
+sudo apt-get install -y libvirt-daemon-system qemu-kvm virtinst virt-viewer python3-libvirt
 ```
 
-2. Check container privileges:
+2. Install Python dependencies:
 ```bash
-# Ensure container has proper capabilities
-podman inspect <container_name> | grep -i cap
+python3 -m pip install ansible molecule molecule-plugins[podman] ansible-lint yamllint
 ```
 
-3. Verify systemd support:
+### Permission Issues
+
+#### Problem
+Insufficient permissions to access libvirt resources or run containers.
+
+#### Solution
+1. Add user to required groups:
 ```bash
-molecule login --exec "systemctl status"
+sudo usermod -aG libvirt,kvm $USER
 ```
 
-4. Check SELinux configuration:
+2. Fix file permissions:
 ```bash
-getenforce
-# If enforcing, try:
-sudo setenforce 0
+./fix_permissions.sh
 ```
 
-### 2. Package Installation Failures
-
-**Symptoms:**
-- Yum/DNF errors during package installation
-- Missing repositories
-- Subscription manager issues
-
-**Solutions:**
-1. Verify network connectivity:
+3. Verify group membership:
 ```bash
-molecule login --exec "curl -I https://access.redhat.com"
+groups
 ```
 
-2. Check repository configuration:
+### Configuration Conflicts
+
+#### Problem
+Conflicting libvirt configurations or network settings.
+
+#### Solution
+1. Check existing configurations:
 ```bash
-molecule login --exec "yum repolist"
+virsh net-list --all
+virsh pool-list --all
 ```
 
-3. Register system if needed:
+2. Remove conflicting resources:
 ```bash
-molecule login --exec "subscription-manager register"
+virsh net-destroy default
+virsh net-undefine default
 ```
 
-4. Attach subscription:
+3. Validate environment:
 ```bash
-molecule login --exec "subscription-manager attach --auto"
+./validate_environment.sh
 ```
 
-### 3. Ansible Module Failures
+## Ansible Role Issues
 
-**Symptoms:**
-- Module-specific errors
-- Python interpreter issues
-- Permission denied errors
+### Role Execution Failures
 
-**Solutions:**
-1. Verify Python interpreter:
+#### Problem
+The Ansible role fails to execute properly.
+
+#### Solution
+1. Check role syntax:
 ```bash
-ansible localhost -m ping
+ansible-playbook --syntax-check playbook.yml
 ```
 
-2. Check module dependencies:
+2. Run role in verbose mode:
 ```bash
-molecule login --exec "rpm -q python3-<module>"
+ansible-playbook -vvv playbook.yml
 ```
 
-3. Increase verbosity:
-```bash
-molecule converge -- -vvv
+3. Verify role variables:
+```yaml
+# Example of correct variables
+libvirt_pools:
+  - name: default
+    type: dir
+    target: /var/lib/libvirt/images
+
+libvirt_networks:
+  - name: default
+    bridge: virbr0
+    ip: 192.168.122.1
 ```
 
-4. Check SELinux context:
+### Network Configuration Issues
+
+#### Problem
+Virtual networks fail to start or have connectivity issues.
+
+#### Solution
+1. Check network status:
 ```bash
-ls -Z /path/to/resource
+virsh net-list --all
 ```
 
-### 4. Firewall Configuration Issues
-
-**Symptoms:**
-- Services not accessible
-- Firewall rules not applied
-- SELinux blocking access
-
-**Solutions:**
-1. Verify firewall rules:
+2. Verify network configuration:
 ```bash
-molecule login --exec "firewall-cmd --list-all"
+virsh net-dumpxml default
 ```
 
-2. Check service definitions:
+3. Debug network issues:
 ```bash
-molecule login --exec "firewall-cmd --get-services"
+# Check network interfaces
+ip addr show
+
+# Check network bridges
+brctl show
+
+# Check firewall rules
+sudo iptables -L -n -v
 ```
 
-3. Verify SELinux ports:
+## Molecule Testing Issues
+
+### Container Runtime Issues
+
+#### Problem
+Podman containers fail to start or run properly.
+
+#### Solution
+1. Check Podman status:
 ```bash
-molecule login --exec "semanage port -l"
+podman info
 ```
 
-4. Check service status:
+2. Verify container networking:
 ```bash
-molecule login --exec "systemctl status firewalld"
+podman network ls
 ```
 
-### 5. User Management Problems
-
-**Symptoms:**
-- Users not created
-- SSH access denied
-- Permission issues
-
-**Solutions:**
-1. Verify user creation:
+3. Clean up stale containers:
 ```bash
-molecule login --exec "id <username>"
+podman rm -f $(podman ps -aq)
 ```
 
-2. Check SSH configuration:
+### Test Failures
+
+#### Problem
+Molecule tests fail during execution.
+
+#### Solution
+1. Run tests with increased verbosity:
 ```bash
-molecule login --exec "cat /etc/ssh/sshd_config"
+ANSIBLE_VERBOSITY=2 molecule test
 ```
 
-3. Verify home directory:
+2. Debug specific test phases:
 ```bash
-molecule login --exec "ls -ld /home/<username>"
+molecule create
+molecule converge
+molecule login  # Inspect the container
 ```
 
-4. Check SELinux context:
+3. Check test logs:
 ```bash
-molecule login --exec "ls -Z /home/<username>/.ssh"
+molecule --debug test
 ```
 
-## Debugging Techniques
+## Environment Validation
 
-### 1. Verbose Output
+### Validation Scripts
 
-Add `-vvv` to any Ansible command:
-```bash
-molecule converge -- -vvv
-```
+1. `validate_environment.sh`:
+   - Checks basic environment setup
+   - Verifies required packages
+   - Tests system configuration
 
-### 2. Container Inspection
+2. `libvirt_validate_environment.sh`:
+   - Validates libvirt installation
+   - Checks service status
+   - Tests network configuration
 
-View container logs:
-```bash
-podman logs <container_name>
-```
-
-Inspect container configuration:
-```bash
-podman inspect <container_name>
-```
-
-### 3. System Logs
-
-View system logs:
-```bash
-molecule login --exec "journalctl -xe"
-```
-
-Check specific service logs:
-```bash
-molecule login --exec "journalctl -u <service>"
-```
-
-### 4. Network Diagnostics
-
-Check network configuration:
-```bash
-molecule login --exec "ip a"
-```
-
-Test connectivity:
-```bash
-molecule login --exec "curl -I https://example.com"
-```
-
-### 5. SELinux Troubleshooting
-
-Check SELinux status:
-```bash
-molecule login --exec "sestatus"
-```
-
-View SELinux alerts:
-```bash
-molecule login --exec "ausearch -m avc -ts recent"
-```
+3. `setup_environment.sh`:
+   - Sets up development environment
+   - Configures required services
+   - Installs dependencies
 
 ## Common Error Messages
 
-### 1. "Permission Denied"
-- Verify user permissions
-- Check SELinux context
-- Ensure proper file ownership
+### "Failed to connect to libvirt"
+```
+error: Failed to connect to the hypervisor
+error: No valid connection
+error: Failed to connect socket to '/var/run/libvirt/libvirt-sock': Permission denied
+```
 
-### 2. "Module Failed"
-- Verify module dependencies
-- Check Python interpreter
-- Review module documentation
+#### Solution
+1. Check libvirtd service:
+```bash
+sudo systemctl status libvirtd
+```
 
-### 3. "Package Not Found"
-- Verify repository configuration
-- Check network connectivity
-- Ensure proper subscription
+2. Verify socket permissions:
+```bash
+ls -l /var/run/libvirt/libvirt-sock
+```
 
-### 4. "Service Failed to Start"
-- Check service logs
-- Verify dependencies
-- Review systemd configuration
+3. Add user to libvirt group:
+```bash
+sudo usermod -aG libvirt $USER
+newgrp libvirt
+```
 
-### 5. "Firewall Rule Not Applied"
-- Verify firewalld service status
-- Check SELinux port configuration
-- Ensure proper zone assignment
+### "Could not find a required package"
+```
+fatal: [localhost]: FAILED! => {"changed": false, "msg": "Could not find required package"}
+```
+
+#### Solution
+1. Update package cache:
+```bash
+# For Red Hat-based systems
+sudo dnf clean all && sudo dnf makecache
+
+# For Debian-based systems
+sudo apt-get update
+```
+
+2. Install missing package:
+```bash
+# Example for libvirt package
+sudo dnf install -y libvirt
+```
+
+## Best Practices
+
+### Debugging Tips
+
+1. Use verbose mode:
+   - Ansible: `-vvv`
+   - Molecule: `--debug`
+   - Podman: `--log-level=debug`
+
+2. Check logs:
+   - System logs: `/var/log/messages` or `/var/log/syslog`
+   - Libvirt logs: `/var/log/libvirt/`
+   - Ansible logs: Set `log_path` in ansible.cfg
+
+3. Validate configurations:
+   - Use provided validation scripts
+   - Check syntax before running
+   - Test in isolation
+
+### Prevention
+
+1. Regular maintenance:
+   - Keep packages updated
+   - Monitor system resources
+   - Review logs periodically
+
+2. Testing:
+   - Run tests before changes
+   - Use staging environments
+   - Validate configurations
+
+3. Documentation:
+   - Keep notes of changes
+   - Document custom configurations
+   - Update troubleshooting guides
+
+## Getting Help
+
+If you encounter issues not covered in this guide:
+
+1. Check the [GitHub Issues](https://github.com/your-org/ansible-role-libvirt/issues)
+2. Review the [Documentation](docs/)
+3. Join the community discussion
+4. Submit a new issue with:
+   - Detailed description
+   - Error messages
+   - System information
+   - Steps to reproduce

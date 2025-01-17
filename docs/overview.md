@@ -1,63 +1,128 @@
-# Ansible Role Template Overview
+# Libvirt Role Overview
 
-## Architecture
+## Introduction
 
-This template provides a foundation for creating Ansible roles specifically designed for Red Hat Enterprise Linux (RHEL) 9.5 environments. It includes the basic structure and testing capabilities using Molecule with Podman as the container engine.
+This repository contains two main components: an Ansible role for managing libvirt-based virtualization environments (`ansible-role-libvirt`) and a Molecule Podman template for testing Ansible roles (`molecule-podman-template`). The Libvirt Role automates the management of virtual machines, networks, and storage pools, while the Molecule Podman template provides a standardized way to test Ansible roles using Molecule and Podman. Together, these components provide a comprehensive solution for managing and testing libvirt-based infrastructure.
 
-### Directory Structure
+## Key Components
+
+### Ansible Role for Libvirt (`ansible-role-libvirt`)
+
+The `ansible-role-libvirt` is designed to automate the management of libvirt-based virtualization environments. It provides a comprehensive set of tools for configuring and managing virtual machines, networks, and storage pools in a consistent and repeatable manner.
+
+#### Features
+
+-   **Virtual Machine Management**: Create, configure, and manage virtual machines
+-   **Network Configuration**: Define and manage virtual networks
+-   **Storage Management**: Configure storage pools and volumes
+-   **Security Integration**: SELinux and firewall configuration
+-   **Performance Optimization**: CPU pinning, memory allocation, and disk I/O tuning
+-   **Automation Framework**: Integration with Ansible and Molecule for testing
+
+### Molecule Podman Template (`molecule-podman-template`)
+
+The `molecule-podman-template` provides a standardized way to test Ansible roles using Molecule and Podman. It includes a set of pre-configured Molecule scenarios and a Dockerfile for building a test environment.
+
+#### Features
+
+-   **Standardized Testing**: Provides a consistent way to test Ansible roles
+-   **Podman Integration**: Uses Podman as the container runtime for testing
+-   **Pre-configured Scenarios**: Includes a default scenario for converging and verifying roles
+-   **Easy to Use**: Simplifies the process of setting up and running Molecule tests
+
+## Repository Architecture
+
+### Core Components
+
+1. **Libvirt Daemon**: Central management service
+2. **QEMU/KVM**: Hypervisor for virtual machines
+3. **Storage Backends**: Directory, LVM, iSCSI, NFS
+4. **Network Backends**: NAT, routed, isolated networks
+5. **Security Layer**: SELinux and firewall integration
+6. **Ansible**: Automation tool used by the role
+7. **Molecule**: Testing framework for Ansible roles
+8. **Podman**: Container runtime used by Molecule for testing
+
+### Component Relationships
+
+```mermaid
+graph TD
+    A[Ansible Role] --> B[Libvirt API]
+    B --> C[QEMU/KVM]
+    B --> D[Storage Backends]
+    B --> E[Network Backends]
+    C --> F[Virtual Machines]
+    D --> G[Storage Pools]
+    E --> H[Virtual Networks]
+    B --> I[Security Layer]
+    I --> J[SELinux]
+    I --> K[Firewall]
+    L[Molecule Podman Template] --> M[Molecule]
+    M --> N[Podman]
+    N --> O[Test Environment]
+    A --> L
 
 ```
-molecule-podman-template/
-├── defaults/          # Default variables
-│   └── main.yml
-├── tasks/             # Main role tasks
-│   └── main.yml
-├── meta/              # Role metadata
-│   └── main.yml
-├── molecule/          # Molecule testing configuration
-│   └── default/
-│       ├── molecule.yml  # Test environment config
-│       ├── converge.yml  # Test playbook
-│       ├── verify.yml    # Test cases
-│       ├── prepare.yml   # Test environment setup
-│       └── Dockerfile    # Test container image
-└── tests/             # Integration tests
-    └── test.yml
+
+## Usage
+
+Refer to the [usage guide](usage.md) for detailed instructions on how to use the Ansible role and the Molecule Podman template.
+
+## Testing
+
+Refer to the [testing guide](testing.md) for information on how to test the Ansible role using the Molecule Podman template.
+
+## Getting Started
+
+### Quick Start
+
+1. Install required packages:
+```bash
+sudo dnf install -y libvirt qemu-kvm virt-install virt-viewer
 ```
 
-## Requirements
+2. Clone the repository:
+```bash
+git clone https://github.com/your-org/ansible-role-libvirt.git
+cd ansible-role-libvirt
+```
 
-* Ansible 2.9 or higher
-* Python 3.9 or higher
-* Access to a RHEL 9.5 target system
-* Molecule
-* Podman (preferred container engine for RHEL)
-* UBI 9 container images access
+3. Run the playbook:
+```bash
+ansible-playbook -i localhost, -c local playbooks/setup.yml
+```
 
-## Converting the Template
+## Documentation Structure
 
-1. Create your new role from this template:
-   ```bash
-   cp -r molecule-podman-template your-role-name
-   cd your-role-name
-   ```
+- **README.md**: Project introduction and quick start guide
+- **docs/overview.md**: High-level architecture and features (this document)
+- **docs/usage.md**: Detailed usage instructions
+- **docs/testing.md**: Testing and verification procedures
+- **docs/api.md**: API reference and integration guide
+- **docs/troubleshooting.md**: Common issues and solutions
+- **docs/contributing.md**: Contribution guidelines
 
-2. Update the role metadata in `meta/main.yml`:
-   * Set the proper role name
-   * Update platform information to include RHEL 9.5
-   * Add relevant tags and dependencies
+## License
 
-3. The molecule configuration in `molecule/default/molecule.yml` is already set up for RHEL 9.5 with Podman:
-   * Uses `registry.access.redhat.com/ubi9/ubi-init:latest`
-   * Configured with proper systemd support
-   * Includes necessary volume mounts and capabilities
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-4. Implement your role logic:
-   * Add tasks in `tasks/main.yml`
-   * Define variables in `defaults/main.yml`
-   * Create handlers in `handlers/main.yml` if needed
-   * Add templates in `templates/` if needed
+## Support
 
-5. Update testing:
-   * Modify `molecule/default/converge.yml` with your role
-   * Add tests to `molecule/default/verify.yml`
+For support and feature requests, please open an issue on our [GitHub repository](https://github.com/your-org/ansible-role-libvirt/issues).
+
+## Roadmap
+
+### Upcoming Features
+- Cloud-init integration
+- GPU passthrough support
+- Live migration capabilities
+- Enhanced monitoring and metrics
+- Backup and restore functionality
+
+## Contributing
+
+We welcome contributions! Please see our [CONTRIBUTING.md](docs/contributing.md) guide for details on how to get started.
+
+## Code of Conduct
+
+This project adheres to the Contributor Covenant [code of conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.

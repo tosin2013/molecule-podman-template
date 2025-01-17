@@ -1,215 +1,353 @@
-# Role Usage Guide
+# Using the Libvirt Role and Molecule Podman Template
 
-## Role Variables
+This document provides comprehensive guidance on using the Ansible Libvirt Role and the Molecule Podman Template.
 
-Define your variables in `defaults/main.yml`. Document each variable here:
+## Using the Ansible Libvirt Role
 
-### Common Variables
+This section provides instructions for using the Ansible Libvirt Role to manage your virtualized infrastructure.
 
-```yaml
-# Target RHEL version
-rhel_version: "9.5"
+## Using the Scripts
 
-# System package configuration
-system_packages:
-  - vim-enhanced
-  - git
-  - curl
+This repository includes several scripts to help with setting up and managing the environment. This section describes how to use each of them.
 
-# Service configuration
-services:
-  - name: sshd
-    state: started
-    enabled: true
+### fix_permissions.sh
 
-# Firewall configuration
-firewall:
-  ports:
-    - 22
-    - 80
-    - 443
-  services:
-    - ssh
-    - http
-    - https
+This script fixes file permissions.
 
-# User management
-users:
-  - name: admin
-    groups: wheel
-    ssh_key: "ssh-rsa AAAAB3NzaC1yc2E..."
+**Usage:**
+
+```bash
+./fix_permissions.sh
 ```
 
-### Variable Usage Examples
+### setup_environment.sh
 
-1. Override default packages:
-```yaml
-system_packages:
-  - vim-enhanced
-  - git
-  - curl
-  - htop
-  - tmux
+This script sets up the development environment.
+
+**Usage:**
+
+```bash
+./setup_environment.sh
 ```
 
-2. Configure additional services:
-```yaml
-services:
-  - name: sshd
-    state: started
-    enabled: true
-  - name: httpd
-    state: started
-    enabled: true
+### validate_environment.sh
+
+This script validates the development environment.
+
+**Usage:**
+
+```bash
+./validate_environment.sh
 ```
 
-3. Add firewall rules:
-```yaml
-firewall:
-  ports:
-    - 22
-    - 80
-    - 443
-    - 8080
-  services:
-    - ssh
-    - http
-    - https
-    - cockpit
+### libvirt_validate_environment.sh
+
+This script validates the environment for the Ansible role.
+
+**Usage:**
+
+```bash
+./ansible-role-libvirt/libvirt_validate_environment.sh
 ```
 
-### Best Practices
+### setup_env.sh
 
-- Use descriptive variable names
-- Group related variables together
-- Provide default values that work for most cases
-- Document each variable with comments in defaults/main.yml
-- Use YAML anchors and aliases for repeated structures
+This script sets up the environment for the Ansible role.
 
-## Example Playbook
+**Usage:**
+
+```bash
+./ansible-role-libvirt/scripts/setup_env.sh
+```
+
+### setup_remote_libvirt.sh
+
+This script sets up a remote libvirt environment.
+
+**Usage:**
+
+```bash
+./ansible-role-libvirt/scripts/setup_remote_libvirt.sh
+```
+
+## Using the Molecule Podman Template
+
+The `molecule-podman-template` directory contains a template for testing Ansible roles using Molecule and Podman.
+
+### Prerequisites
+
+-   Molecule
+-   Podman
+
+### Usage
+
+1. Navigate to the `molecule-podman-template` directory:
+
+    ```bash
+    cd molecule-podman-template
+    ```
+
+2. Run the default Molecule scenario:
+
+    ```bash
+    molecule test
+    ```
+
+    This will run the `converge.yml` playbook to set up the environment, and then run the `verify.yml` playbook to verify the role.
+
+3. You can also run specific Molecule commands, such as:
+
+    ```bash
+    molecule converge
+    molecule verify
+    molecule destroy
+    ```
+
+## Installation
+
+### Requirements
+
+-   Ansible 2.9+
+-   Python 3.6+
+-   libvirt 6.0+
+-   qemu-kvm
+
+### Installation Methods
+
+1. From Ansible Galaxy:
+
+    ```bash
+    ansible-galaxy install ansible-role-libvirt
+    ```
+
+2. From source:
+
+    ```bash
+    git clone https://github.com/your-repo/ansible-role-libvirt.git
+    cd ansible-role-libvirt
+    ```
+
+3. Using requirements.yml:
+
+    ```yaml
+    - src: ansible-role-libvirt
+      version: main
+    ```
+
+## Configuration
+
+### Role Variables
+
+#### Required Variables
+- `libvirt_pools`: List of storage pools
+- `libvirt_networks`: List of virtual networks
+
+#### Optional Variables
+- `libvirt_users`: List of users to add to libvirt group
+- `libvirt_service_state`: Service state (started/stopped)
+- `libvirt_service_enabled`: Service enabled on boot
+
+### Example Configuration
+
+```yaml
+libvirt_pools:
+  - name: default
+    type: dir
+    target: /var/lib/libvirt/images
+
+libvirt_networks:
+  - name: default
+    bridge: virbr0
+    ip: 192.168.122.1
+    netmask: 255.255.255.0
+    dhcp:
+      start: 192.168.122.2
+      end: 192.168.122.254
+```
+
+## Role Execution
 
 ### Basic Usage
-
-```yaml
-- hosts: rhel_servers
-  become: true
-  roles:
-    - role: your-role-name
-      vars:
-        rhel_version: "9.5"
+```bash
+ansible-playbook -i inventory playbook.yml
 ```
 
-### Advanced Configuration
-
-1. **Custom Package Installation**
-```yaml
-- hosts: rhel_servers
-  become: true
-  roles:
-    - role: your-role-name
-      vars:
-        system_packages:
-          - vim-enhanced
-          - git
-          - curl
-          - htop
-          - tmux
+### Targeting Specific Hosts
+```bash
+ansible-playbook -i inventory -l libvirt_hosts playbook.yml
 ```
 
-2. **Service Management**
-```yaml
-- hosts: rhel_servers
-  become: true
-  roles:
-    - role: your-role-name
-      vars:
-        services:
-          - name: sshd
-            state: started
-            enabled: true
-          - name: httpd
-            state: started
-            enabled: true
+### Running with Tags
+```bash
+ansible-playbook -i inventory playbook.yml --tags "network,storage"
 ```
 
-3. **Firewall Configuration**
+## Common Workflows
+
+### Creating Virtual Machines
+1. Define VM configuration
+2. Create storage volumes
+3. Configure networking
+4. Install operating system
+
+### Managing Storage
+1. Create storage pools
+2. Define storage volumes
+3. Attach volumes to VMs
+4. Monitor storage usage
+
+### Network Configuration
+1. Define virtual networks
+2. Configure network bridges
+3. Set up DHCP
+4. Configure firewall rules
+
+## Integration with Other Tools
+
+### Molecule Testing
+1. Create test scenarios
+2. Define test infrastructure
+3. Run integration tests
+4. Verify role functionality
+
+### CI/CD Pipelines
+1. Add role to requirements
+2. Configure test environments
+3. Run automated tests
+4. Deploy to production
+
+## Advanced Usage
+
+### Custom Modules
+1. Create custom modules
+2. Add module utilities
+3. Extend role functionality
+4. Maintain module documentation
+
+### Role Dependencies
+1. Define dependencies
+2. Manage role versions
+3. Handle conflicts
+4. Test integration
+
+## Best Practices
+
+### Configuration Management
+1. Use version control
+2. Maintain separate environments
+3. Document all changes
+4. Review configurations regularly
+
+### Security Considerations
+1. Use secure connections
+2. Manage user permissions
+3. Monitor access logs
+4. Apply security updates
+
+### Performance Optimization
+1. Tune resource allocation
+2. Optimize storage
+3. Configure networking
+4. Monitor system metrics
+
+## Troubleshooting
+
+### Common Issues
+1. Permission errors
+2. Network connectivity
+3. Storage allocation
+4. Resource constraints
+
+### Diagnostic Tools
+1. `virsh` commands
+2. System logs
+3. Network tools
+4. Storage utilities
+
+## Maintenance
+
+### Regular Tasks
+1. Backup configurations
+2. Update packages
+3. Review logs
+4. Test recovery procedures
+
+### Upgrade Procedures
+1. Check compatibility
+2. Backup current setup
+3. Test new version
+4. Update documentation
+
+## Examples
+
+### Full Playbook Example
 ```yaml
-- hosts: rhel_servers
-  become: true
+- hosts: libvirt_hosts
   roles:
-    - role: your-role-name
+    - role: ansible-role-libvirt
       vars:
-        firewall:
-          ports:
-            - 22
-            - 80
-            - 443
-            - 8080
-          services:
-            - ssh
-            - http
-            - https
-            - cockpit
+        libvirt_pools:
+          - name: default
+            type: dir
+            target: /var/lib/libvirt/images
+        libvirt_networks:
+          - name: default
+            bridge: virbr0
+            ip: 192.168.122.1
+            netmask: 255.255.255.0
+            dhcp:
+              start: 192.168.122.2
+              end: 192.168.122.254
 ```
 
-4. **User Management**
+### Minimal Configuration
 ```yaml
-- hosts: rhel_servers
-  become: true
+- hosts: libvirt_hosts
   roles:
-    - role: your-role-name
+    - role: ansible-role-libvirt
       vars:
-        users:
-          - name: admin
-            groups: wheel
-            ssh_key: "ssh-rsa AAAAB3NzaC1yc2E..."
-          - name: deploy
-            groups: users
-            ssh_key: "ssh-rsa AAAAB3NzaC1yc2E..."
+        libvirt_pools:
+          - name: default
+            type: dir
+            target: /var/lib/libvirt/images
 ```
 
-### Integration with Other Roles
+## API Reference
 
-```yaml
-- hosts: rhel_servers
-  become: true
-  roles:
-    - role: your-role-name
-      vars:
-        rhel_version: "9.5"
-    - role: timezone
-      vars:
-        timezone: "America/New_York"
-    - role: ntp
-      vars:
-        ntp_servers:
-          - 0.pool.ntp.org
-          - 1.pool.ntp.org
-```
+### Available Modules
+1. `libvirt_pool`
+2. `libvirt_network`
+3. `libvirt_domain`
+4. `libvirt_volume`
 
-### Conditional Execution
+### Module Parameters
+- `name`: Resource name
+- `state`: Desired state
+- `autostart`: Start on boot
+- `persistent`: Persistent configuration
 
-```yaml
-- hosts: rhel_servers
-  become: true
-  tasks:
-    - name: Include role conditionally
-      include_role:
-        name: your-role-name
-      when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "9"
-      vars:
-        rhel_version: "9.5"
-```
+## Version Compatibility
 
-### Tagged Execution
+### Supported Versions
+| Ansible | Libvirt | Python |
+|---------|---------|--------|
+| 2.9+    | 6.0+    | 3.6+   |
 
-```yaml
-- hosts: rhel_servers
-  become: true
-  roles:
-    - role: your-role-name
-      tags:
-        - base
-        - security
-      vars:
-        rhel_version: "9.5"
+### Deprecated Features
+1. Legacy network configuration
+2. Old storage formats
+3. Outdated authentication methods
+
+## Migration Guide
+
+### From Previous Versions
+1. Review breaking changes
+2. Update configurations
+3. Test new features
+4. Update documentation
+
+### To Newer Versions
+1. Check release notes
+2. Backup configurations
+3. Test upgrade process
+4. Verify functionality

@@ -32,6 +32,14 @@ Comprehensive documentation is available in the [docs](docs/) directory:
 
 ## Architecture Overview
 
+This role provides comprehensive management of libvirt virtualization on RHEL systems. Key features include:
+
+- Virtual machine lifecycle management
+- Network configuration for libvirt
+- Storage pool management
+- User access control
+- Resource allocation management
+
 The template follows standard Ansible role structure with additional Molecule testing configuration:
 
 ```
@@ -99,6 +107,43 @@ The testing infrastructure uses:
 ## Role Variables
 
 Define your variables in `defaults/main.yml`. Document each variable here:
+
+### Quick Reference Table
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| libvirt_networks | List of virtual networks to configure | [] |
+| libvirt_storage_pools | Storage pools configuration | [] |
+| libvirt_vms | Virtual machines to manage | [] |
+| libvirt_users | Users and permissions | [] |
+| libvirt_tls | TLS configuration | false |
+
+### Example Configuration
+
+```yaml
+libvirt_networks:
+  - name: internal
+    bridge: virbr1
+    ip: 192.168.100.1
+    netmask: 255.255.255.0
+    dhcp:
+      start: 192.168.100.100
+      end: 192.168.100.200
+
+libvirt_storage_pools:
+  - name: default
+    type: dir
+    target: /var/lib/libvirt/images
+
+libvirt_vms:
+  - name: test-vm
+    memory: 2048
+    vcpu: 2
+    disks:
+      - size: 20G
+        pool: default
+    networks:
+      - network: internal
 
 ### Common Variables
 
@@ -207,6 +252,40 @@ Here's how to use this role in your playbook:
 
 This template uses Molecule with Podman for testing. The configuration is already set up for RHEL 9.5 compatibility. For detailed testing procedures and examples, see the [Testing Documentation](docs/testing.md).
 
+### Libvirt-Specific Testing Considerations
+
+When testing libvirt functionality, additional configurations may be required:
+
+1. Enable nested virtualization in your test environment
+2. Configure proper SELinux contexts for libvirt
+3. Set up required kernel modules
+4. Configure proper user permissions
+
+Example test configuration:
+
+```yaml
+scenario:
+  test_sequence:
+    - destroy
+    - create
+    - prepare
+    - converge
+    - verify
+    - destroy
+
+platforms:
+  - name: libvirt-test
+    image: registry.access.redhat.com/ubi9/ubi-init:latest
+    privileged: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    capabilities:
+      - SYS_ADMIN
+    tmpfs:
+      - /run
+      - /tmp
+    command: /sbin/init
+
 ### Key Testing Features
 - Podman-based test environments
 - UBI 9 container images
@@ -220,6 +299,17 @@ molecule test
 ```
 
 For more commands and detailed testing workflow, refer to the [Testing Documentation](docs/testing.md).
+
+## Security Considerations
+
+When using libvirt, consider the following security best practices:
+
+- Use TLS for remote connections
+- Implement proper SELinux policies
+- Restrict user permissions using polkit
+- Regularly update libvirt packages
+- Monitor virtual machine activity
+- Use secure storage backends
 
 ## Troubleshooting
 

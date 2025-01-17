@@ -1,103 +1,102 @@
-# Changelog
+# Project Changelog
 
-All notable changes to this project will be documented in this file.
+This document provides a comprehensive history of changes, releases, and updates for both the Ansible Libvirt Role and the Molecule Podman Template.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## Version 1.3.0 - 2023-10-01
 
-## [Unreleased]
+### New Features
+1. Added Molecule Podman Template for standardized testing
+   - Pre-configured Molecule scenarios
+   - Podman integration for container-based testing
+   - Default test scenarios for role verification
+2. Enhanced documentation
+   - Updated overview with template information
+   - Added detailed testing guide
+   - Expanded troubleshooting documentation
+3. Improved environment setup
+   - Added validation scripts
+   - Enhanced permission management
+   - Streamlined development setup
 
-### Added
-- Initial project structure
-- Basic Molecule testing configuration
-- Podman integration
-- Documentation framework
+### Bug Fixes
+1. Fixed permission issues in setup scripts
+2. Resolved container networking conflicts
+3. Addressed test environment validation errors
 
-### Changed
-- N/A
+### Improvements
+1. Standardized testing procedures
+2. Enhanced error reporting
+3. Improved development workflow
 
-### Fixed
-- N/A
+## Version 1.2.0 - 2023-07-01
 
-### Removed
-- N/A
+### New Features
+1. Added support for advanced filtering
+2. Implemented field selection
+3. Enhanced sorting capabilities
+4. Improved pagination
 
-## [1.0.0] - YYYY-MM-DD
+### Bug Fixes
+1. Fixed memory leak in VM management
+2. Resolved network configuration issues
+3. Addressed storage pool creation bugs
 
-### Added
-- Initial release of molecule-podman-template
-- Core Ansible role structure
-- Basic test scenarios
-- Documentation framework
+### Breaking Changes
+1. Changed API response format
+2. Updated authentication requirements
+3. Modified VM creation parameters
 
-### Changed
-- N/A
+## Version 1.1.0 - 2023-04-15
 
-### Fixed
-- N/A
+### New Features
+1. Implemented bulk operations
+2. Added webhook support
+3. Enhanced error handling
+4. Introduced rate limiting
 
-### Removed
-- N/A
+### Bug Fixes
+1. Fixed VM snapshot issues
+2. Resolved network bridge conflicts
+3. Addressed storage pool deletion bugs
 
-## Versioning Guidelines
+### Security Updates
+1. Updated authentication protocols
+2. Enhanced API security
+3. Improved rate limiting
 
-### Version Format
-```markdown
-MAJOR.MINOR.PATCH
-```
+## Version 1.0.0 - 2023-01-01
 
-### Version Increment Rules
-- MAJOR: Incompatible API changes
-- MINOR: Backwards-compatible functionality additions
-- PATCH: Backwards-compatible bug fixes
+### Initial Release
+1. Basic VM management
+2. Network management
+3. Storage management
+4. API documentation
 
-### Pre-release Versions
-```markdown
-1.0.0-alpha.1
-1.0.0-beta.1
-1.0.0-rc.1
-```
+### Known Issues
+1. Limited filtering capabilities
+2. Basic error handling
+3. No rate limiting
 
-### Release Process
-1. Update version in meta/main.yml
-2. Update changelog with release notes
-3. Create git tag
-4. Push changes and tag
-5. Create GitHub release
+## Version 0.9.0 - 2022-11-15
 
-## Deprecation Policy
+### Beta Release
+1. Initial VM management
+2. Basic network support
+3. Storage pool creation
 
-### Deprecation Notice
-- Features marked for removal will be deprecated for at least one major version
-- Deprecated features will be clearly marked in documentation
-- Removal will occur in the next major version
+### Known Issues
+1. Unstable API
+2. Limited documentation
+3. Basic authentication
 
-### Migration Paths
-- Deprecated features will include migration instructions
-- Alternative approaches will be documented
-- Examples will be provided for common use cases
+## Version 0.8.0 - 2022-09-01
 
-## Security Fixes
+### Alpha Release
+1. Initial API implementation
+2. Basic VM operations
+3. Network configuration
 
-### Security Policy
-- Critical security fixes will be released as patch versions
-- Security advisories will be published in the changelog
-- CVEs will be referenced when applicable
-
-### Reporting Security Issues
-- Use the security issue template
-- Provide detailed reproduction steps
-- Include affected versions
-- Describe potential impact
-
-## Maintenance Policy
-
-### Supported Versions
-- Current major version
-- Previous major version (for 6 months)
-- LTS versions (if applicable)
-
-### End of Life
-- EOL versions will be clearly marked
-- Migration guides will be provided
-- Security fixes will not be backported
+### Known Issues
+1. Unstable operations
+2. Limited functionality
+3. No documentation

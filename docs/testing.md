@@ -1,190 +1,181 @@
-# Testing with Molecule
+# Testing Guide
 
-## Test Environment Setup
+This document provides comprehensive guidance on testing the Ansible Libvirt Role using Molecule and Podman.
 
-The template includes a pre-configured Molecule environment using Podman as the container engine. The test environment is configured in `molecule/default/molecule.yml`.
+## Overview
 
-### Key Configuration
+Testing is performed using Molecule, a testing framework for Ansible roles, with Podman as the container runtime. The testing framework is configured to validate both the Ansible role functionality and the infrastructure it creates.
 
+## Prerequisites
+
+### Required Software
+- Molecule
+- Podman
+- Python 3.6+
+- Ansible 2.9+
+
+### Installation
+
+1. Install Podman:
+```bash
+# For Red Hat-based systems
+sudo dnf install -y podman
+
+# For Debian-based systems
+sudo apt-get install -y podman
+```
+
+2. Install Molecule and dependencies:
+```bash
+python3 -m pip install molecule molecule-plugins[podman] ansible-lint yamllint
+```
+
+## Test Structure
+
+The test suite is organized into several key components:
+
+### Molecule Configuration (`molecule.yml`)
 ```yaml
+# molecule/default/molecule.yml
+---
 dependency:
   name: galaxy
 driver:
   name: podman
 platforms:
-  - name: rhel9
-    image: registry.access.redhat.com/ubi9/ubi-init:latest
-    privileged: true
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
-    capabilities:
-      - SYS_ADMIN
-    command: /usr/sbin/init
+  - name: instance
+    image: docker.io/pycontribs/centos:8
+    pre_build_image: true
 provisioner:
   name: ansible
-  inventory:
-    group_vars:
-      all:
-        ansible_python_interpreter: /usr/bin/python3
 verifier:
   name: ansible
 ```
 
-### Test Container Features
+### Test Scenarios
 
-- Systemd support enabled
-- Proper SELinux configuration
-- Network access to Red Hat repositories
-- Python 3.9+ installed
-- Ansible pre-installed
+1. **Prepare Playbook** (`prepare.yml`):
+   - Sets up the test environment
+   - Installs prerequisites
+   - Configures system settings
+
+2. **Converge Playbook** (`converge.yml`):
+   - Applies the role configuration
+   - Sets up libvirt environment
+   - Configures networks and storage
+
+3. **Verify Playbook** (`verify.yml`):
+   - Validates role functionality
+   - Checks service status
+   - Verifies configurations
 
 ## Running Tests
 
-### Basic Commands
-
-1. **Create Test Environment**
-```bash
-molecule create
-```
-
-2. **Run Playbook**
-```bash
-molecule converge
-```
-
-3. **Verify Tests**
-```bash
-molecule verify
-```
-
-4. **Destroy Environment**
-```bash
-molecule destroy
-```
-
-5. **Full Test Cycle**
+### Full Test Suite
 ```bash
 molecule test
 ```
+This runs the complete test sequence:
+1. Destroy any existing instances
+2. Create test instances
+3. Prepare the environment
+4. Converge the role
+5. Verify the results
+6. Destroy test instances
 
-### Test Development Workflow
+### Individual Test Phases
 
-1. Start test environment:
+#### Create Test Environment
 ```bash
 molecule create
 ```
 
-2. Login to container:
+#### Prepare Environment
 ```bash
-molecule login
+molecule prepare
 ```
 
-3. Make changes to role and test:
+#### Apply Role
 ```bash
 molecule converge
 ```
 
-4. Verify changes:
+#### Run Verification
 ```bash
 molecule verify
 ```
 
-5. When finished:
+#### Clean Up
 ```bash
 molecule destroy
+```
+
+### Running Specific Scenarios
+```bash
+molecule test -s <scenario_name>
 ```
 
 ## Writing Tests
 
-Tests are defined in `molecule/default/verify.yml`. Example test structure:
+### Verify Tests
+
+Add test cases to `verify.yml`:
 
 ```yaml
-- name: Verify system configuration
+---
+- name: Verify
   hosts: all
+  gather_facts: false
   tasks:
-    - name: Check RHEL version
-      ansible.builtin.shell: cat /etc/redhat-release
-      register: rhel_version
-      changed_when: false
+    - name: Check if libvirtd service is running
+      ansible.builtin.service_facts:
 
-    - name: Assert RHEL version
+    - name: Assert libvirtd is running
       ansible.builtin.assert:
         that:
-          - "'9.5' in rhel_version.stdout"
+          - ansible_facts.services['libvirtd.service'].state == 'running'
+        fail_msg: "libvirtd service is not running"
+        success_msg: "libvirtd service is running"
 
-    - name: Check installed packages
-      ansible.builtin.package:
-        name: "{{ item }}"
-        state: present
-      loop: "{{ system_packages }}"
+    - name: Check if storage pool exists
+      command: virsh pool-list --all
+      register: pool_list
       changed_when: false
 
-    - name: Verify services
-      ansible.builtin.service:
-        name: "{{ item.name }}"
-        state: started
-        enabled: true
-      loop: "{{ services }}"
-      changed_when: false
+    - name: Assert default storage pool exists
+      ansible.builtin.assert:
+        that:
+          - '"default" in pool_list.stdout'
+        fail_msg: "Default storage pool not found"
+        success_msg: "Default storage pool exists"
 ```
 
 ### Test Best Practices
 
-- Test both success and failure cases
-- Verify idempotency (run converge twice)
-- Check for proper error handling
-- Test edge cases and boundary conditions
-- Verify role variables work as expected
-- Test role integration with other roles
+1. **Idempotency Tests**
+   - Run converge twice to ensure no changes on second run
+   - Check for consistent results
 
-## Debugging Tests
+2. **Failure Testing**
+   - Test error conditions
+   - Verify proper error handling
+   - Check recovery procedures
 
-### Common Issues
+3. **Resource Cleanup**
+   - Ensure all resources are properly removed
+   - Check for leftover artifacts
 
-1. **Systemd not working**
-   - Ensure container is running with proper privileges
-   - Verify /sys/fs/cgroup is mounted
-   - Check SELinux configuration
-
-2. **Package installation failures**
-   - Verify network access
-   - Check repository configuration
-   - Ensure proper subscription management
-
-3. **Ansible module failures**
-   - Verify Python interpreter path
-   - Check required dependencies
-   - Test with verbose output (-vvv)
-
-### Debugging Commands
-
-1. View container logs:
-```bash
-podman logs <container_name>
-```
-
-2. Inspect container configuration:
-```bash
-podman inspect <container_name>
-```
-
-3. Run ad-hoc commands:
-```bash
-molecule login --exec "journalctl -xe"
-```
-
-4. Increase verbosity:
-```bash
-molecule --debug converge
-```
+4. **Configuration Validation**
+   - Verify all settings are applied
+   - Check for correct file permissions
+   - Validate service configurations
 
 ## Continuous Integration
 
-Example GitHub Actions configuration:
+### GitHub Actions Example
 
 ```yaml
-name: Molecule Tests
-
+name: Molecule Test
 on: [push, pull_request]
 
 jobs:
@@ -192,26 +183,112 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
-          
+          python-version: '3.x'
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install molecule molecule-podman ansible
-          
+          python -m pip install molecule molecule-plugins[podman] ansible-lint yamllint
       - name: Run Molecule tests
         run: molecule test
 ```
 
-### CI Best Practices
+## Troubleshooting
 
-- Run tests on multiple Python versions
-- Test against different RHEL versions
-- Include linting and syntax checking
-- Cache dependencies between runs
-- Fail fast on critical errors
-- Generate test reports
+### Common Issues
+
+1. **Container Runtime Issues**
+   - Ensure Podman is installed and running
+   - Check container permissions
+   - Verify network connectivity
+
+2. **Molecule Configuration**
+   - Validate molecule.yml syntax
+   - Check platform configurations
+   - Verify driver settings
+
+3. **Test Failures**
+   - Check test instance logs
+   - Verify role variables
+   - Validate dependencies
+
+### Debugging Tips
+
+1. **Interactive Debugging**
+```bash
+molecule create
+molecule converge
+molecule login
+```
+
+2. **Increase Verbosity**
+```bash
+molecule --debug test
+ANSIBLE_VERBOSITY=2 molecule test
+```
+
+3. **Keep Instances Running**
+```bash
+molecule test --destroy never
+```
+
+## Test Coverage
+
+### Areas to Test
+
+1. **Installation**
+   - Package installation
+   - Service configuration
+   - File permissions
+
+2. **Configuration**
+   - Network setup
+   - Storage configuration
+   - Security settings
+
+3. **Operations**
+   - Service management
+   - Resource creation
+   - Error handling
+
+4. **Integration**
+   - Network connectivity
+   - Storage access
+   - User permissions
+
+## Reporting
+
+### Test Reports
+
+Generate test reports using Ansible callback plugins:
+
+```yaml
+# ansible.cfg
+[defaults]
+callback_plugins = junit
+callback_whitelist = junit
+
+[junit_xml]
+output_dir = ./test-reports
+```
+
+### Code Quality
+
+1. **Linting**
+```bash
+molecule lint
+ansible-lint
+yamllint .
+```
+
+2. **Syntax Check**
+```bash
+ansible-playbook --syntax-check playbook.yml
+```
+
+## Resources
+
+- [Molecule Documentation](https://molecule.readthedocs.io/)
+- [Podman Documentation](https://podman.io/docs/)
+- [Ansible Testing Strategies](https://docs.ansible.com/ansible/latest/reference_appendices/test_strategies.html)
